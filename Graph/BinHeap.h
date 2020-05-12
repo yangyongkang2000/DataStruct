@@ -1,9 +1,9 @@
-#ifndef _BinHeam_H
-#define _BinHeam_H
+#ifndef _BinHeap_H
+#define _BinHeap_H
 #include<stdlib.h>
 #include<stdio.h>
 #include <limits.h>
-#include "/Users/yangyongkang/Desktop/C/Graph/Graph.h"
+#include "Graph.h"
 struct HeapStruct;
 typedef struct HeapStruct *PriorityQueue;
 typedef int ElementType;

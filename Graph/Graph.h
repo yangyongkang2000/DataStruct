@@ -1,7 +1,6 @@
 /*Dijkstra算法*/
 #ifndef _Graph_H
 #define _Graph_H
-#include "BinHeap.h"
 #include<stdio.h>
 #define NotAVertex (-1)
 #define Infinity INT32_MAX
@@ -29,4 +28,6 @@ void InitTable(Vertex Start,Graph G,Table T,int NumVertex);
 void PrintPath(Vertex V,Table T);
 void Dijkstra(Table T,int NumVertex,int Size);
 void ReadGraph(Graph G,Table T,int NumVertex);
+int *Topsort(Graph G,int Size);
+void MaximumPath(Graph G,int Size,Table T);
 #endif
