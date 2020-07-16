@@ -1,5 +1,35 @@
 #include "Queue.h"
-void ReadGraph(Graph G,Table T,int NumVertex)
+void FreeGraphPackage(GraphPackage gp)
+{
+        for(int i=0;i<gp->Length;free(gp->list[i++]));
+        free(gp->list);
+        free(gp);
+}
+void TransGraph(GraphPackage gp,Graph G)
+{
+    struct GraphRule * tmp;
+    List tmp1,tmp2;
+        for(int i=0;i<gp->Length;i++)
+        {
+            if(G[(tmp=gp->list[i])->U]->Next==NULL)
+            {
+            
+                 G[tmp->U]->Next=(List)malloc(sizeof(struct Node));
+                 G[tmp->U]->Next->V=tmp->V;
+                 G[tmp->U]->Next->w=tmp->w;
+                 G[tmp->U]->Next->Next=NULL;
+            }else
+            {
+                tmp1=G[tmp->U]->Next;
+                tmp2=(List)malloc(sizeof(struct Node));
+                tmp2->V=tmp->V;
+                 tmp2->w=tmp->w;
+                 G[tmp->U]->Next=tmp2;
+                 tmp2->Next=tmp1;
+            }
+        }
+}
+static void ReadGraph(Graph G,Table T,int NumVertex)
 {
     int size=NumVertex+1;
     for(int i=0;i<size;i++)
@@ -7,7 +37,7 @@ void ReadGraph(Graph G,Table T,int NumVertex)
        T[i].Header=G[i];
     }
 }
-void InitTable(Vertex Start,Graph G,Table T,int NumVertex)
+static void InitTable(Vertex Start,Graph G,Table T,int NumVertex)
 {
     int i;
     ReadGraph(G,T,NumVertex);
@@ -30,8 +60,13 @@ void PrintPath(Vertex V,Table T)
     }
     printf("%d",V);
 }
-void Dijkstra(Table T,int NumVertex,int Size)
+void Dijkstra(GraphPackage gp,Vertex Start,int NumVertex,int Size)
 {
+    Graph G=(Graph)malloc((NumVertex+1)*sizeof(List));
+    for(int i=0;i<NumVertex+1;G[i++]=(List)malloc(sizeof(struct Node)));
+    TransGraph(gp,G);
+    Table T=(Table)malloc((NumVertex+1)*sizeof(struct TableEntry));
+    InitTable(Start,G,T,NumVertex);
     Vertex V,W;
     List next;
     int size=NumVertex+1;
@@ -58,7 +93,7 @@ void Dijkstra(Table T,int NumVertex,int Size)
        }
        T[V].Known=True;
         List next=T[V].Header->Next;
-       Weight Cvw=T[V].Header->w;
+       Weight Cvw=next->w;
        while(next!=NULL)
        {
            W=next->V;
@@ -68,13 +103,15 @@ void Dijkstra(Table T,int NumVertex,int Size)
                  Insert(W,H,T);
                  T[W].Path=V;
              }
-             Cvw=next->w;
              next=next->Next;
+             Cvw=next->w;
        }
     }
 }
-int *Topsort(Graph G,int Size)
+int *Topsort(GraphPackage gp,int Size)
 {
+    Graph G=(Graph)malloc((Size+1)*sizeof(List));
+    for(int i=0;i<Size+1;G[i++]=(List)malloc(sizeof(struct Node)));
     int Counter=0;
     Queue Q=CreateQueue(Size);MakeEmpty1(Q);
     Vertex V,W;
@@ -132,8 +169,12 @@ static void InitTable1(Graph G,Table T,int NumVertex)
             T[i].Path=NotAVertex;
     }
 }
-void MaximumPath(Graph G,int Size,Table T)
+void MaximumPath(GraphPackage gp,int Size)
 {
+    Graph G=(Graph)malloc((Size+1)*sizeof(List));
+    for(int i=0;i<Size+1;G[i++]=(List)malloc(sizeof(struct Node)));
+    TransGraph(gp,G);
+    Table T=(Table)malloc((Size+1)*sizeof(struct TableEntry));
     InitTable1(G,T,Size);
     int Counter=0,first=0;
     Queue Q=CreateQueue(Size);MakeEmpty1(Q);
@@ -162,8 +203,8 @@ void MaximumPath(Graph G,int Size,Table T)
         {
             V=Dequeue(Q);
             T[V].Dist=first++?T[V].Dist:0;
-            Cvw=G[V]->w;
             tmp=G[V]->Next;
+            Cvw=tmp->w;
             while (tmp!=NULL)
             {
                 W=tmp->V;
@@ -176,8 +217,44 @@ void MaximumPath(Graph G,int Size,Table T)
                {
                    Enqueue(W,Q);
                }
-                Cvw=tmp->w;
                 tmp=tmp->Next;
+                Cvw=tmp->w;
             }
         }
+}
+static void SetUnion1(DisjSet S,SetType Root1,SetType Root2)
+{
+          S[Root2]=Root1;
+}
+static SetType Find1(ElementType X,DisjSet S)
+{
+    if(S[X]<=0)
+    {
+        return X;
+    }
+    return Find1(S[X],S);
+}
+static int compar(const void *pt1,const void *pt2)
+{
+       return ((struct GraphRule*)pt1)->w>((struct GraphRule*)pt2)->w?1:-1;
+}
+void Kruskal(GraphPackage gp,int NumVertex)
+{
+    gp->SpanningTree=(struct GraphRule**)malloc((NumVertex-1)*sizeof(struct GraphRule*));
+    int EdgesAccepeted=0,index=0;
+   DisjSet S=(DisjSet)calloc(NumVertex+1,sizeof(SetType));
+    Vertex U,V;
+    struct GraphRule *E;
+   qsort(gp->list,gp->Length,sizeof(struct GraphRule*),compar);
+    while(EdgesAccepeted<NumVertex-1)
+    {
+          E=gp->list[index++];
+          U=E->U;
+          V=E->V;
+          if(Find1(U,S)!=Find1(V,S))
+          {
+              SetUnion1(S,V,U);
+              gp->SpanningTree[EdgesAccepeted++]=E;
+          }
+    }
 }

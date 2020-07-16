@@ -1,8 +1,5 @@
 #ifndef _BinHeap_H
 #define _BinHeap_H
-#include<stdlib.h>
-#include<stdio.h>
-#include <limits.h>
 #include "Graph.h"
 struct HeapStruct;
 typedef struct HeapStruct *PriorityQueue;
